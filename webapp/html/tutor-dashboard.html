@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Dashboard - EduConnect</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <span class="brand-edu">Edu</span><span class="brand-connect">Connect</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Tutor Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="student-dashboard.html">Switch to Student</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">                            <li><a class="dropdown-item" href="edit-profile.html">Edit Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="index.html">Back to Homepage</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container container mt-5 pt-5">
+        <div class="row mb-4">            <div class="col-md-8">
+                <h2>Welcome, <span id="tutorName">Tutor</span>!</h2>
+                <div class="d-flex align-items-center mt-3">
+                    <p class="mb-0 me-3">Your current tutoring status:</p>
+                    <div class="availability-toggle d-flex align-items-center">
+                        <span id="availabilityStatus" class="badge bg-success me-2">Available</span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="toggleAvailability" checked>
+                            <label class="form-check-label" for="toggleAvailability">Toggle Availability</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="tutor-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="activeRequestsCount">0</span>
+                        <span class="stat-label">Active Requests</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="completedSessionsCount">0</span>
+                        <span class="stat-label">Completed Sessions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Open Requests Tab -->
+        <ul class="nav nav-tabs mb-4" id="tutorTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="openRequestsTab" data-bs-toggle="tab" href="#openRequests">Open Requests</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="myResponsesTab" data-bs-toggle="tab" href="#myResponses">My Responses</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="upcomingMeetingsTab" data-bs-toggle="tab" href="#upcomingMeetings">Upcoming Meetings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="allMeetingsTab" data-bs-toggle="tab" href="#allMeetings">All Meetings</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Open Requests Panel -->
+            <div class="tab-pane fade show active" id="openRequests">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Open Tutoring Requests</h5>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" id="requestSearchInput" placeholder="Search by course or topic">
+                            <button class="btn btn-outline-secondary" type="button" id="searchRequestsBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="openRequestsList">
+                            <!-- Open requests will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Responses Panel -->
+            <div class="tab-pane fade" id="myResponses">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">My Responses</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="myResponsesList">
+                            <!-- Responses will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Meetings Panel -->
+            <div class="tab-pane fade" id="upcomingMeetings">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Upcoming Meetings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="upcomingMeetingsList">
+                            <!-- Upcoming meetings will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Meetings Panel -->
+            <div class="tab-pane fade" id="allMeetings">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">All Meetings</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="meetingsFilterBtn" data-bs-toggle="dropdown">
+                                Filter by Status
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="meetingsFilterBtn">
+                                <li><a class="dropdown-item active" href="#" data-filter="all">All</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="completed">Completed</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="upcoming">Upcoming</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="canceled">Canceled</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Student</th>
+                                        <th>Course</th>
+                                        <th>Topic</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allMeetingsTable">
+                                    <!-- All meetings will be loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Details Modal -->
+    <div class="modal fade" id="meetingDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Meeting Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="meetingDetailsContent">
+                    <!-- Meeting details will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="../js/tutor-dashboard.js"></script>
+    <script src="../js/footer.js"></script>
+</body>
+</html>
