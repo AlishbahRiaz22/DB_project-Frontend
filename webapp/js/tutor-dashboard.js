@@ -166,23 +166,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 status: 'canceled'
             }
         ]
-    };
-
-    // Initialize the dashboard
+    };    // Initialize the dashboard
     function initDashboard() {
         // Set user name and stats
         document.getElementById('tutorName').textContent = tutorData.name;
         document.getElementById('activeRequestsCount').textContent = tutorData.stats.activeRequests;
         document.getElementById('completedSessionsCount').textContent = tutorData.stats.completedSessions;
-        
-        // Set availability status
-        updateAvailabilityStatus(tutorData.availability);
 
         // Load data for all tabs
         loadOpenRequests();
         loadMyResponses();
         loadUpcomingMeetings();
-        loadAllMeetings();
         
         // Set up event listeners
         setupEventListeners();
@@ -203,28 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         // In a real app, we would fetch more tutor-specific data here
-    }    // Update availability status display
-    function updateAvailabilityStatus(isAvailable) {
-        const statusElement = document.getElementById('availabilityStatus');
-        const toggleElement = document.getElementById('toggleAvailability');
-        
-        if (isAvailable) {
-            statusElement.textContent = 'Available';
-            statusElement.className = 'badge bg-success me-2';
-            toggleElement.checked = true;
-        } else {
-            statusElement.textContent = 'Unavailable';
-            statusElement.className = 'badge bg-danger me-2';
-            toggleElement.checked = false;
-        }
-        
-        // Save to localStorage
-        const userData = JSON.parse(localStorage.getItem('user')) || {};
-        if (userData) {
-            userData.availability = isAvailable;
-            localStorage.setItem('user', JSON.stringify(userData));
-        }
-    }
+    }    // Availability status function removed
 
     // Load open tutoring requests
     function loadOpenRequests() {
@@ -343,56 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load all meetings
-    function loadAllMeetings(filter = 'all') {
-        const allMeetingsTable = document.getElementById('allMeetingsTable');
-        
-        let filteredMeetings = tutorData.allMeetings;
-        if (filter !== 'all') {
-            filteredMeetings = tutorData.allMeetings.filter(meeting => meeting.status === filter);
-        }
-        
-        if (filteredMeetings.length === 0) {
-            allMeetingsTable.innerHTML = `<tr><td colspan="7" class="text-center">No meetings found.</td></tr>`;
-            return;
-        }
-
-        allMeetingsTable.innerHTML = filteredMeetings.map(meeting => `
-            <tr data-meeting-id="${meeting.id}" class="${getRowClass(meeting.status)}">
-                <td>${meeting.date}</td>
-                <td>${meeting.time}</td>
-                <td>${meeting.studentName}</td>
-                <td>${meeting.course}</td>
-                <td>${meeting.topic}</td>
-                <td><span class="badge ${getStatusBadgeClass(meeting.status)}">${capitalizeFirstLetter(meeting.status)}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary view-meeting-btn">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    ${meeting.status === 'upcoming' ? `
-                        <button class="btn btn-sm btn-outline-danger cancel-btn">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
-                </td>
-            </tr>
-        `).join('');
-        
-        // Add event listeners to the table row buttons
-        document.querySelectorAll('.view-meeting-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const meetingId = e.target.closest('tr').dataset.meetingId;
-                viewMeetingDetails(meetingId);
-            });
-        });
-        
-        document.querySelectorAll('.cancel-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const meetingId = e.target.closest('tr').dataset.meetingId;
-                cancelMeeting(meetingId);
-            });
-        });
-    }    // Respond to a tutoring request
+    // Load all meetings    // All Meetings section removed// Respond to a tutoring request
     function respondToRequest(requestId) {
         const request = tutorData.openRequests.find(req => req.id.toString() === requestId);
         if (!request) return;
@@ -590,40 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Reload meeting lists
         loadUpcomingMeetings();
-        loadAllMeetings();
-    }
-
-    // Setup event listeners
-    function setupEventListeners() {        // Toggle availability button
-        document.getElementById('toggleAvailability').addEventListener('change', (e) => {
-            const isAvailable = e.target.checked;
-            tutorData.availability = isAvailable;
-            updateAvailabilityStatus(isAvailable);
-            
-            // Show notification
-            if (isAvailable) {
-                showNotification('You are now available for tutoring requests', 'success', 'fa-user-check');
-            } else {
-                showNotification('You are now unavailable for tutoring requests', 'warning', 'fa-user-clock');
-            }
-            
-            // In a real app, this would update the server with the tutor's availability
-        });
-
-        // Filter meeting status dropdown
-        document.querySelectorAll('#allMeetings .dropdown-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Update active filter class
-                document.querySelectorAll('#allMeetings .dropdown-item').forEach(i => i.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                // Apply filter
-                const filter = e.target.dataset.filter;
-                loadAllMeetings(filter);
-            });
-        });
+        loadAllMeetings();    }    // Setup event listeners
+    function setupEventListeners() {
 
         // Search requests
         document.getElementById('searchRequestsBtn').addEventListener('click', () => {
@@ -682,9 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 document.getElementById('searchRequestsBtn').click();
             }
-        });
-
-        // Tab switching to update content
+        });        // Tab switching to update content
         document.querySelectorAll('#tutorTabs a[data-bs-toggle="tab"]').forEach(tab => {
             tab.addEventListener('shown.bs.tab', (e) => {
                 const targetId = e.target.getAttribute('href');
@@ -695,8 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadMyResponses();
                 } else if (targetId === '#upcomingMeetings') {
                     loadUpcomingMeetings();
-                } else if (targetId === '#allMeetings') {
-                    loadAllMeetings();
                 }
             });
         });

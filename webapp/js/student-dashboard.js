@@ -29,18 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 acceptedTutor: { tutorId: 3, tutorName: 'Carol Williams', rating: 4.9 }
             }
         ]
-    };
-
-    // Initialize the dashboard
+    };    // Initialize the dashboard
     function initDashboard() {
         // Set user name
         document.getElementById('studentName').textContent = userData.name;
         
-        // Show/hide switch profile button based on tutor status
+        // Always show switch profile button, but logic will determine if user becomes tutor or goes to tutor dashboard
         const switchProfileBtn = document.getElementById('switchProfileBtn');
-        if (userData.isTutor) {
-            switchProfileBtn.classList.remove('d-none');
-        }
+        switchProfileBtn.classList.remove('d-none');
 
         // Load course options
         loadCourseOptions();
@@ -138,24 +134,96 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('')}
             </div>
-        `;
-    }
-
+        `;    }
+    
     function setupEventListeners() {
+        // Switch to Tutor button functionality
+        document.getElementById('switchToTutorBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (userData.isTutor) {
+                // If already a tutor, redirect directly to tutor dashboard
+                window.location.href = 'tutor-dashboard.html';
+            } else {
+                // If not a tutor, show the "Become a Tutor" modal
+                const becomeATutorModal = new bootstrap.Modal(document.getElementById('becomeATutorModal'));
+                
+                // Populate course selection
+                populateTutorCourseSelection();
+                
+                becomeATutorModal.show();
+            }
+        });
+        
+        // Process tutor application
+        document.getElementById('submitTutorApplication').addEventListener('click', () => {
+            const bio = document.getElementById('tutorBio').value;
+            const isAgreed = document.getElementById('agreementCheck').checked;
+            
+            // Check if form is complete
+            if (!bio || !isAgreed) {
+                showNotification('Please complete all fields and agree to the terms', 'warning', 'fa-exclamation-circle');
+                return;
+            }
+            
+            // Get selected courses with proficiency
+            const selectedCourses = [];
+            document.querySelectorAll('.tutor-course-checkbox:checked').forEach(checkbox => {
+                const courseId = checkbox.value;
+                const proficiencySlider = document.getElementById(`proficiency-${courseId}`);
+                
+                selectedCourses.push({
+                    id: courseId,
+                    proficiency: proficiencySlider ? parseInt(proficiencySlider.value) : 5
+                });
+            });
+            
+            if (selectedCourses.length === 0) {
+                showNotification('Please select at least one course to tutor', 'warning', 'fa-exclamation-circle');
+                return;
+            }
+            
+            // In a real app, this would be an API call
+            console.log('Tutor application submitted:', { bio, courses: selectedCourses });
+            
+            // Update user data
+            userData.isTutor = true;
+            userData.tutorBio = bio;
+            userData.tutorCourses = selectedCourses;
+            
+            // Update localStorage
+            const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+            storedUser.isTutor = true;
+            storedUser.tutorBio = bio;
+            storedUser.tutorCourses = selectedCourses;
+            localStorage.setItem('user', JSON.stringify(storedUser));
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('becomeATutorModal'));
+            modal.hide();
+            
+            showNotification('Congratulations! You are now a tutor.', 'success', 'fa-check-circle');
+            
+            // Redirect to tutor dashboard after a brief delay
+            setTimeout(() => {
+                window.location.href = 'tutor-dashboard.html';
+            }, 1500);
+        });
+        
         // Show all requests button
         document.getElementById('showAllRequestsBtn').addEventListener('click', () => {
             loadRequests(false);
         });
 
         // New request form submission
-        document.getElementById('submitRequest').addEventListener('click', () => {
-            const formData = {
+        document.getElementById('submitRequest').addEventListener('click', () => {            const formData = {
                 course: document.getElementById('requestCourse').value,
                 topic: document.getElementById('requestTopic').value,
                 description: document.getElementById('requestDescription').value,
                 date: document.getElementById('requestDate').value,
                 time: document.getElementById('requestTime').value
-            };            // Validate form
+            };
+            
+            // Validate form
             if (!formData.course || !formData.topic || !formData.description || !formData.date || !formData.time) {
                 showNotification('Please fill in all fields', 'warning', 'fa-exclamation-circle');
                 return;
@@ -184,9 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('submitFeedback').addEventListener('click', () => {
             const formData = {
                 tutorId: document.getElementById('tutorSelect').value,
-                rating: document.querySelector('input[name="rating"]:checked')?.value,
-                feedback: document.getElementById('feedbackText').value
-            };            // Validate form
+                rating: document.querySelector('input[name="rating"]:checked')?.value,                feedback: document.getElementById('feedbackText').value
+            };
+            
+            // Validate form
             if (!formData.tutorId || !formData.rating || !formData.feedback) {
                 showNotification('Please fill in all feedback fields', 'warning', 'fa-exclamation-circle');
                 return;
@@ -199,9 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Close modal and reset form
             const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
             modal.hide();
-            document.getElementById('feedbackForm').reset();
-        });
-    }    function acceptTutor(requestId, tutorId) {
+            document.getElementById('feedbackForm').reset();        });
+    }
+    
+    function acceptTutor(requestId, tutorId) {
         // In a real application, this would be an API call
         console.log(`Accepting tutor ${tutorId} for request ${requestId}`);
         showNotification('Tutor accepted successfully! You can now schedule a session.', 'success', 'fa-calendar-check');
@@ -212,7 +282,65 @@ document.addEventListener('DOMContentLoaded', () => {
         // In a real application, this would be an API call
         console.log(`Declining tutor ${tutorId} for request ${requestId}`);
         showNotification('Tutor response has been declined', 'info');
-        loadRequests(true);
+        loadRequests(true);    }
+    
+    // Populate tutor course selection for the Become a Tutor modal
+    function populateTutorCourseSelection() {
+        const courseSelectionContainer = document.getElementById('tutorCourseSelection');
+        // Clear previous content
+        courseSelectionContainer.innerHTML = '';
+        
+        const courses = [
+            { id: 'CS101', name: 'Introduction to Programming' },
+            { id: 'CS201', name: 'Data Structures' },
+            { id: 'MTH101', name: 'Calculus I' },
+            { id: 'MTH201', name: 'Linear Algebra' }
+        ];
+        
+        courses.forEach(course => {
+            const courseItem = document.createElement('div');
+            courseItem.className = 'course-item mb-3 p-3 border rounded';
+            
+            // Create course checkbox
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.className = 'd-flex align-items-center mb-2';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input tutor-course-checkbox me-2';
+            checkbox.id = `course-${course.id}`;
+            checkbox.value = course.id;
+            
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = `course-${course.id}`;
+            label.textContent = `${course.id} - ${course.name}`;
+            
+            checkboxDiv.appendChild(checkbox);
+            checkboxDiv.appendChild(label);
+            courseItem.appendChild(checkboxDiv);
+            
+            // Create proficiency slider
+            const proficiencyDiv = document.createElement('div');
+            proficiencyDiv.className = 'proficiency-slider d-none';
+            
+            proficiencyDiv.innerHTML = `
+                <label class="form-label d-flex justify-content-between">
+                    <span>Proficiency Level:</span>
+                    <span class="proficiency-value" id="proficiency-value-${course.id}">5</span>
+                </label>
+                <input type="range" class="form-range" min="1" max="10" value="5" 
+                       id="proficiency-${course.id}" onInput="document.getElementById('proficiency-value-${course.id}').textContent = this.value">
+            `;
+            
+            courseItem.appendChild(proficiencyDiv);
+            courseSelectionContainer.appendChild(courseItem);
+            
+            // Show/hide proficiency slider when checkbox is checked/unchecked
+            checkbox.addEventListener('change', () => {
+                proficiencyDiv.className = checkbox.checked ? 'proficiency-slider' : 'proficiency-slider d-none';
+            });
+        });
     }
     
     // Show a notification message
