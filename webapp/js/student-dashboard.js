@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Set current mode for profile page session display
+    localStorage.setItem('currentMode', 'student');
+    
     // Get user data from localStorage or use mock data
     const storedUser = JSON.parse(localStorage.getItem('user')) || {};
     

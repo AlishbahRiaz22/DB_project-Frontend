@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Set current mode for profile page session display
+    localStorage.setItem('currentMode', 'tutor');
+    
     // Mock data (in a real application, this would come from a backend)
     const tutorData = {
         name: 'John Doe',

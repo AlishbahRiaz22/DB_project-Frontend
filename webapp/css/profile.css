@@ -1,0 +1,152 @@
+/* Profile Page Custom Styles */
+
+/* Card and container styles */
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card.shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+/* Avatar and profile header styles */
+.avatar-placeholder {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+}
+
+.bg-soft-primary {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+}
+
+.bg-soft-success {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+}
+
+.bg-soft-info {
+    background-color: rgba(13, 202, 240, 0.15);
+    color: #0dcaf0;
+}
+
+.bg-soft-warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+/* Profile stats cards */
+.card .card-body i {
+    opacity: 0.9;
+}
+
+/* Course cards */
+.course-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.course-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Session items */
+.session-item {
+    transition: background-color 0.2s ease;
+}
+
+.session-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.session-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Info items */
+.info-item .form-control-plaintext {
+    padding: 0.375rem 0;
+    font-weight: 500;
+}
+
+.info-item .border-bottom {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Activity list */
+#recentActivityList .list-group-item {
+    transition: all 0.2s ease;
+}
+
+#recentActivityList .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Mode Switcher Styles */
+#modeSwitcher .btn-group {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 3px;
+    border-radius: 8px;
+}
+
+#modeSwitcher .btn {
+    font-size: 0.85rem;
+    border-radius: 6px;
+    padding: 0.375rem 1rem;
+    transition: all 0.3s ease;
+}
+
+#modeSwitcher .btn-outline-light {
+    border-color: transparent;
+}
+
+#modeSwitcher .btn-outline-light:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: transparent;
+}
+
+#modeSwitcher .btn-outline-light.active {
+    background-color: white;
+    color: var(--bs-primary);
+    font-weight: 600;
+    border-color: transparent;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-header {
+        padding: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .session-icon, .course-icon {
+        width: 32px;
+        height: 32px;
+    }
+}
