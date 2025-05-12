@@ -1,3 +1,4 @@
+// filepath: e:\2nd_semester\OOP\project\webapp\js\student-dashboard.js
 document.addEventListener('DOMContentLoaded', () => {
     // Set current mode for profile page session display
     localStorage.setItem('currentMode', 'student');
@@ -30,9 +31,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 time: '15:30',
                 status: 'accepted',
                 acceptedTutor: { tutorId: 3, tutorName: 'Carol Williams', rating: 4.9 }
+            },
+            {
+                id: 3,
+                course: 'CS201',
+                topic: 'Algorithm Analysis',
+                date: '2025-05-05',
+                time: '13:00',
+                status: 'completed',
+                acceptedTutor: { tutorId: 2, tutorName: 'Bob Johnson', rating: 4.8 },
+                feedback: {
+                    rating: 5,
+                    comment: "Bob was extremely helpful and patient. He explained complex concepts in a simple way."
+                }
             }
         ]
-    };    // Initialize the dashboard
+    };
+
+    // Initialize the dashboard
     function initDashboard() {
         // Set user name
         document.getElementById('studentName').textContent = userData.name;
@@ -81,7 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card-body">
                     <h6 class="card-title d-flex justify-content-between">
                         <span>${request.course} - ${request.topic}</span>
-                        <span class="badge ${request.status === 'pending' ? 'bg-warning' : 'bg-success'}">${request.status}</span>
+                        <span class="badge ${
+                            request.status === 'pending' ? 'bg-warning' : 
+                            request.status === 'accepted' ? 'bg-success' : 
+                            'bg-secondary'
+                        }">${request.status}</span>
                     </h6>
                     <p class="card-text">
                         <small class="text-muted">
@@ -101,17 +121,55 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.decline-tutor').forEach(btn => {
             btn.addEventListener('click', (e) => declineTutor(e.target.dataset.requestId, e.target.dataset.tutorId));
         });
+        
+        // Add event listeners for complete request buttons
+        document.querySelectorAll('.complete-request-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const requestId = e.target.closest('.complete-request-btn').dataset.requestId;
+                const tutorId = e.target.closest('.complete-request-btn').dataset.tutorId;
+                const tutorName = e.target.closest('.complete-request-btn').dataset.tutorName;
+                showSessionFeedbackModal(requestId, tutorId, tutorName);
+            });
+        });
     }
 
     function renderTutorResponses(request) {
+        if (request.status === 'completed') {
+            return `
+                <div class="completed-request">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-primary">
+                            <i class="fas fa-check-double"></i> 
+                            Completed with ${request.acceptedTutor.tutorName} 
+                            (Your Rating: ${request.feedback ? request.feedback.rating : 'N/A'}⭐)
+                        </small>
+                        <span class="badge bg-secondary">Completed</span>
+                    </div>
+                    ${request.feedback ? `
+                        <div class="mt-2">
+                            <small class="text-muted fst-italic">"${request.feedback.comment}"</small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
         if (request.status === 'accepted') {
             return `
                 <div class="accepted-tutor">
-                    <small class="text-success">
-                        <i class="fas fa-check-circle"></i> 
-                        Accepted Tutor: ${request.acceptedTutor.tutorName} 
-                        (Rating: ${request.acceptedTutor.rating}⭐)
-                    </small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle"></i> 
+                            Accepted Tutor: ${request.acceptedTutor.tutorName} 
+                            (Rating: ${request.acceptedTutor.rating}⭐)
+                        </small>
+                        <button class="btn btn-sm btn-outline-primary complete-request-btn" 
+                                data-request-id="${request.id}" 
+                                data-tutor-id="${request.acceptedTutor.tutorId}"
+                                data-tutor-name="${request.acceptedTutor.tutorName}">
+                            <i class="fas fa-check me-1"></i> Complete Request
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -137,7 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('')}
             </div>
-        `;    }
+        `;
+    }
     
     function setupEventListeners() {
         // Switch to Tutor button functionality
@@ -218,7 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // New request form submission
-        document.getElementById('submitRequest').addEventListener('click', () => {            const formData = {
+        document.getElementById('submitRequest').addEventListener('click', () => {
+            const formData = {
                 course: document.getElementById('requestCourse').value,
                 topic: document.getElementById('requestTopic').value,
                 description: document.getElementById('requestDescription').value,
@@ -255,7 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('submitFeedback').addEventListener('click', () => {
             const formData = {
                 tutorId: document.getElementById('tutorSelect').value,
-                rating: document.querySelector('input[name="rating"]:checked')?.value,                feedback: document.getElementById('feedbackText').value
+                rating: document.querySelector('input[name="rating"]:checked')?.value,
+                feedback: document.getElementById('feedbackText').value
             };
             
             // Validate form
@@ -271,7 +332,53 @@ document.addEventListener('DOMContentLoaded', () => {
             // Close modal and reset form
             const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
             modal.hide();
-            document.getElementById('feedbackForm').reset();        });
+            document.getElementById('feedbackForm').reset();
+        });
+        
+        // Submit session feedback
+        document.getElementById('submitSessionFeedback').addEventListener('click', () => {
+            const formData = {
+                requestId: document.getElementById('feedbackRequestId').value,
+                tutorId: document.getElementById('feedbackTutorId').value,
+                rating: document.getElementById('sessionRating').value,
+                feedback: document.getElementById('sessionFeedbackText').value
+            };
+            
+            // Validate form
+            if (!formData.rating) {
+                showNotification('Please provide a rating', 'warning', 'fa-exclamation-circle');
+                return;
+            }
+            
+            if (!formData.feedback.trim()) {
+                showNotification('Please provide feedback about your session', 'warning', 'fa-exclamation-circle');
+                return;
+            }
+
+            // In a real application, this would be an API call
+            console.log('Session feedback submitted:', formData);
+            
+            // Mark request as completed in our mock data
+            userData.requests.forEach(request => {
+                if (request.id.toString() === formData.requestId) {
+                    request.status = 'completed';
+                    request.feedback = {
+                        rating: formData.rating,
+                        comment: formData.feedback
+                    };
+                }
+            });
+            
+            // Show success message
+            showNotification('Feedback submitted successfully! The tutoring request has been marked as completed.', 'success', 'fa-check-circle');
+            
+            // Close modal and reset form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('sessionFeedbackModal'));
+            modal.hide();
+            
+            // Reload requests to update UI
+            loadRequests(true);
+        });
     }
     
     function acceptTutor(requestId, tutorId) {
@@ -285,7 +392,52 @@ document.addEventListener('DOMContentLoaded', () => {
         // In a real application, this would be an API call
         console.log(`Declining tutor ${tutorId} for request ${requestId}`);
         showNotification('Tutor response has been declined', 'info');
-        loadRequests(true);    }
+        loadRequests(true);
+    }
+    
+    // Show session feedback modal
+    function showSessionFeedbackModal(requestId, tutorId, tutorName) {
+        // Set values in the form
+        document.getElementById('feedbackRequestId').value = requestId;
+        document.getElementById('feedbackTutorId').value = tutorId;
+        document.getElementById('feedbackTutorName').textContent = tutorName;
+        
+        // Reset stars and form
+        document.querySelectorAll('.star-rating').forEach(star => {
+            star.classList.remove('active');
+            star.classList.replace('fas', 'far');
+        });
+        document.getElementById('sessionRating').value = '';
+        document.getElementById('ratingText').textContent = 'Click to rate';
+        document.getElementById('sessionFeedbackText').value = '';
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('sessionFeedbackModal'));
+        modal.show();
+        
+        // Add event listeners for star rating
+        document.querySelectorAll('.star-rating').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                document.getElementById('sessionRating').value = rating;
+                
+                // Update visual feedback
+                document.querySelectorAll('.star-rating').forEach(s => {
+                    if (s.dataset.rating <= rating) {
+                        s.classList.replace('far', 'fas');
+                        s.classList.add('active');
+                    } else {
+                        s.classList.replace('fas', 'far');
+                        s.classList.remove('active');
+                    }
+                });
+                
+                // Update rating text
+                const ratingTexts = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+                document.getElementById('ratingText').textContent = ratingTexts[rating];
+            });
+        });
+    }
     
     // Populate tutor course selection for the Become a Tutor modal
     function populateTutorCourseSelection() {

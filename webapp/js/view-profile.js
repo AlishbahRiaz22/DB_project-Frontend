@@ -246,8 +246,18 @@ function loadUserData() {
     document.getElementById('displayBatch').textContent = userData.batch || 'Not provided';
     document.getElementById('displaySemester').textContent = 
         userData.semester ? `${userData.semester}${getOrdinalSuffix(userData.semester)} Semester` : 'Not provided';
-    document.getElementById('displayPhone').textContent = userData.phone || 'Not provided';
-    document.getElementById('displayEmail').textContent = userData.email || 'Not provided';
+    document.getElementById('displayPhone').textContent = userData.phone || 'Not provided';    document.getElementById('displayEmail').textContent = userData.email || 'Not provided';
+    
+    // Set active since year (either from user data or default to current year)
+    const activeSinceElement = document.getElementById('activeSince');
+    if (activeSinceElement) {
+        // If user has a registrationDate field, use that year
+        // Otherwise default to current year
+        const registrationYear = userData.registrationDate 
+            ? new Date(userData.registrationDate).getFullYear() 
+            : new Date().getFullYear();
+        activeSinceElement.textContent = registrationYear;
+    }
 
     // Update statistics
     document.getElementById('coursesCount').textContent = userStats.coursesCount;
@@ -270,13 +280,12 @@ function loadUserData() {
         
         // Display user's tutor courses
         displayTutorCourses(userData.courses);
-        
-        // Show mode switcher for users who are both students and tutors
+          // Show mode switcher for users who are both students and tutors
         // In a real app, we'd check if they have both roles. Here we assume all users are students,
         // and some are also tutors
-        const modeSwitcher = document.getElementById('modeSwitcher');
-        if (modeSwitcher) {
-            modeSwitcher.classList.remove('d-none');
+        const modeSwitcherSessions = document.getElementById('modeSwitcherSessions');
+        if (modeSwitcherSessions) {
+            modeSwitcherSessions.classList.remove('d-none');
         }
     }
     
@@ -302,7 +311,7 @@ function loadUserData() {
     updateHomeLogo(currentMode);
 }
 
-// Add event listeners for mode switcher buttons
+// Add event listeners for mode switcher buttons (now in the Upcoming Sessions section)
 const studentModeBtn = document.getElementById('studentModeBtn');
 const tutorModeBtn = document.getElementById('tutorModeBtn');
 
@@ -316,8 +325,19 @@ if (studentModeBtn && tutorModeBtn) {
             updateHomeLogo('student');
         }
     });
-    
-    tutorModeBtn.addEventListener('click', function() {
+      tutorModeBtn.addEventListener('click', function() {
+        // Get current user data
+        const userData = JSON.parse(localStorage.getItem('user')) || {};
+        
+        // Check if the user is already a tutor
+        if (!userData.isTutor) {
+            // Show the become tutor modal if user is not a tutor
+            const becomeTutorModal = new bootstrap.Modal(document.getElementById('becomeTutorModal'));
+            becomeTutorModal.show();
+            return; // Stop here, don't switch mode
+        }
+        
+        // Continue with regular mode switching for tutors
         if (!this.classList.contains('active')) {
             studentModeBtn.classList.remove('active');
             this.classList.add('active');
@@ -340,3 +360,81 @@ if (homeLogo) {
 
 // Load user data when page loads
 loadUserData();
+
+// Become a Tutor Modal Functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const becomeTutorCheck = document.getElementById('becomeTutorCheck');
+    const tutorCourseSelectionSection = document.getElementById('tutorCourseSelectionSection');
+    const saveTutorProfileBtn = document.getElementById('saveTutorProfile');
+    
+    if (becomeTutorCheck) {
+        becomeTutorCheck.addEventListener('change', function() {
+            tutorCourseSelectionSection.classList.toggle('d-none', !this.checked);
+            saveTutorProfileBtn.disabled = !this.checked;
+            
+            // If checked and course selection is empty, populate it
+            if (this.checked && document.getElementById('tutorCourseSelection').children.length === 0) {
+                populateTutorCourseSelection();
+            }
+        });
+    }
+    
+    // Save tutor profile when button is clicked
+    if (saveTutorProfileBtn) {
+        saveTutorProfileBtn.addEventListener('click', function() {
+            // Get selected courses and proficiency levels
+            const selectedCourses = [];
+            const courseCheckboxes = document.querySelectorAll('.tutor-course-checkbox:checked');
+            
+            courseCheckboxes.forEach(checkbox => {
+                const courseId = checkbox.value;
+                const proficiencyLevel = document.getElementById(`proficiency-${courseId}`).value;
+                
+                selectedCourses.push({
+                    courseId: courseId,
+                    proficiency: parseInt(proficiencyLevel)
+                });
+            });
+            
+            // Validate at least one course is selected
+            if (selectedCourses.length === 0) {
+                alert('Please select at least one course to teach.');
+                return;
+            }
+            
+            // Update user data in localStorage
+            const userData = JSON.parse(localStorage.getItem('user')) || {};
+            userData.isTutor = true;
+            userData.courses = selectedCourses;
+            localStorage.setItem('user', JSON.stringify(userData));
+            
+            // Close the modal
+            const becomeTutorModal = bootstrap.Modal.getInstance(document.getElementById('becomeTutorModal'));
+            becomeTutorModal.hide();
+            
+            // Update the UI to reflect the user is now a tutor
+            document.getElementById('tutorBadge').classList.remove('d-none');
+            document.getElementById('tutorSection').classList.remove('d-none');
+            document.getElementById('tutorDashboardLink').classList.remove('d-none');
+            document.getElementById('modeSwitcherSessions').classList.remove('d-none');
+            
+            // Switch to tutor mode
+            const studentModeBtn = document.getElementById('studentModeBtn');
+            const tutorModeBtn = document.getElementById('tutorModeBtn');
+            
+            studentModeBtn.classList.remove('active');
+            tutorModeBtn.classList.add('active');
+            localStorage.setItem('currentMode', 'tutor');
+            
+            // Update tutor courses display
+            displayTutorCourses(selectedCourses);
+            
+            // Update sessions and logo
+            updateUpcomingSessions('tutor');
+            updateHomeLogo('tutor');
+            
+            // Show success message
+            alert('Congratulations! You are now registered as a tutor.');
+        });
+    }
+});

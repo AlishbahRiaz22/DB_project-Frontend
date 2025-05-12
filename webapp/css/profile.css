@@ -1,5 +1,10 @@
 /* Profile Page Custom Styles */
 
+/* Yale Blue color */
+:root {
+    --yale-blue: #0f4d92;
+}
+
 /* Card and container styles */
 .card {
     border-radius: 12px;
@@ -36,8 +41,35 @@
 }
 
 .bg-soft-info {
-    background-color: rgba(13, 202, 240, 0.15);
-    color: #0dcaf0;
+    background-color: rgba(72, 95, 136, 0.15);
+    color: #485F88;
+}
+
+/* Override Bootstrap's default primary color with Yale blue */
+.bg-primary {
+    background-color: var(--yale-blue) !important; /* Yale blue */
+}
+
+.text-primary {
+    color: var(--yale-blue) !important; /* Yale blue for text */
+}
+
+/* Override Bootstrap's default bright blue/info color with a darker shade */
+.bg-info {
+    background-color: #384C65 !important; /* Darker blue that matches the header */
+}
+
+.text-info {
+    color: #384C65 !important; /* Matching text color */
+}
+
+/* Override the progress bar colors */
+.progress-bar.bg-primary {
+    background-color: var(--yale-blue) !important;
+}
+
+.progress-bar.bg-info {
+    background-color: #384C65 !important;
 }
 
 .bg-soft-warning {

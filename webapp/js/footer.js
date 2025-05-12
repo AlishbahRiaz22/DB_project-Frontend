@@ -17,14 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Contact</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <h5>Resources</h5>
-                    <ul class="nav flex-column">
-                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Help Center</a></li>
-                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Tutoring Tips</a></li>
-                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">FAQs</a></li>
-                    </ul>
-                </div>
+               
                 <div class="col-md-2 mb-3 mb-md-0">
                     <h5>Social</h5>
                     <div class="social-links">
