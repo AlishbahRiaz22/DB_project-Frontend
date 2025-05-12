@@ -175,12 +175,11 @@ function updateUpcomingSessions(mode) {
     if (!sessionsContainer) return;
     
     const sessions = mode === 'tutor' ? tutorSessions : studentSessions;
-    
-    // Update the heading of the sessions section
+      // Update the heading of the sessions section
     const sessionCards = document.querySelectorAll('.card-header h5');
     sessionCards.forEach(header => {
         if (header.closest('.card').querySelector('#upcomingSessions')) {
-            header.innerHTML = `<i class="fas fa-calendar-alt me-2 text-primary"></i> Upcoming ${mode === 'tutor' ? 'Tutoring' : 'Learning'} Sessions`;
+            header.innerHTML = `<i class="fas fa-calendar-alt me-2 text-primary"></i> ${mode === 'tutor' ? 'Upcoming Meetings' : 'Upcoming Learning Sessions'}`;
         }
     });
     
@@ -324,8 +323,7 @@ if (studentModeBtn && tutorModeBtn) {
             updateUpcomingSessions('student');
             updateHomeLogo('student');
         }
-    });
-      tutorModeBtn.addEventListener('click', function() {
+    });      tutorModeBtn.addEventListener('click', function() {
         // Get current user data
         const userData = JSON.parse(localStorage.getItem('user')) || {};
         
@@ -334,6 +332,15 @@ if (studentModeBtn && tutorModeBtn) {
             // Show the become tutor modal if user is not a tutor
             const becomeTutorModal = new bootstrap.Modal(document.getElementById('becomeTutorModal'));
             becomeTutorModal.show();
+            
+            // Reset the checkbox and hide course selection
+            const becomeTutorCheck = document.getElementById('becomeTutorCheck');
+            const tutorCourseSelectionSection = document.getElementById('tutorCourseSelectionSection');
+            if (becomeTutorCheck && tutorCourseSelectionSection) {
+                becomeTutorCheck.checked = false;
+                tutorCourseSelectionSection.classList.add('d-none');
+            }
+            
             return; // Stop here, don't switch mode
         }
         

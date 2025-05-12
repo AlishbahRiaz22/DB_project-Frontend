@@ -5,6 +5,21 @@
     --yale-blue: #0f4d92;
 }
 
+/* Tutor course selection styles */
+.course-item {
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+}
+
+.course-item:hover {
+    background-color: #f1f3f5;
+}
+
+.proficiency-slider {
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* Card and container styles */
 .card {
     border-radius: 12px;
