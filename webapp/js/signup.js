@@ -1,3 +1,5 @@
+ipali = '10.7.241.116'
+
 document.addEventListener("DOMContentLoaded", () => {
     const signupForm = document.getElementById("signupForm");
     const tutorCheckbox = document.getElementById("isTutor");
@@ -61,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tutorSection.classList.toggle("d-none", !tutorCheckbox.checked);
 
         if (tutorCheckbox.checked && coursesList.children.length === 0) {
-            fetch("http://localhost:8077/api/courses")
+            fetch(`http://${ipali}:8077/api/courses`)
                 .then((response) => {
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return response.json();
@@ -122,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Submitting Form Data:", formData); // Debug log
 
         try {
-            const response = await fetch("http://localhost:8077/api/auth/signup", {
+            const response = await fetch(`http:${ipali}//:8077/api/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
