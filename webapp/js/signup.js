@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Submitting Form Data:", formData); // Debug log
 
         try {
-            const response = await fetch(`http:${ipali}//:8077/api/auth/signup`, {
+            const response = await fetch(`http://${ipali}:8077/api/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
