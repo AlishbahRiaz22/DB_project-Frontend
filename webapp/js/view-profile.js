@@ -1,447 +1,336 @@
-// Course list data (in a real application, this would come from a backend)
-const courses = [
-    { id: 'CS101', name: 'Introduction to Programming' },
-    { id: 'CS201', name: 'Data Structures' },
-    { id: 'CS301', name: 'Database Systems' },
-    { id: 'MTH101', name: 'Calculus I' },
-    { id: 'MTH201', name: 'Linear Algebra' },
-    { id: 'PHY101', name: 'Physics I' },
-    { id: 'ENG101', name: 'English Composition' }
-];
+ipali = '10.7.241.116'
 
-// Mock statistics (in a real app, this would come from the backend)
-const userStats = {
-    coursesCount: 4,
-    sessionsCount: 12,
-    rating: 4.8,
-    level: 'Advanced'
-};
-
-// Get ordinal suffix for numbers (1st, 2nd, 3rd, etc.)
-function getOrdinalSuffix(num) {
-    const n = parseInt(num);
-    if (isNaN(n)) return '';
+document.addEventListener('DOMContentLoaded', function() {
     
-    if (n % 10 === 1 && n % 100 !== 11) return 'st';
-    if (n % 10 === 2 && n % 100 !== 12) return 'nd';
-    if (n % 10 === 3 && n % 100 !== 13) return 'rd';
-    return 'th';
-}
-
-// Display tutor courses with proficiency levels
-function displayTutorCourses(userCourses) {
-    if (!userCourses || userCourses.length === 0) {
-        document.getElementById('tutorCoursesList').innerHTML = 
-            '<div class="col-12"><div class="alert alert-info">No courses selected yet. Go to Edit Profile to add courses you can teach.</div></div>';
+    // Get user ID from localStorage or URL parameter
+    const cmsId = JSON.parse(localStorage.getItem('cmsId')) ;
+    console.log('CMS ID:', cmsId);
+    
+    // If no userId is found, redirect to login
+    if (!cmsId) {
+        window.location.href = 'login.html';
         return;
     }
+    
+    // Initialize the profile page
+    initializeProfile(cmsId);
+    
+    // Setup event listeners
+    setupEventListeners();
+});
 
-    const coursesList = document.getElementById('tutorCoursesList');
-    const coursesHTML = userCourses.map(userCourse => {
-        // Find course name from our course list
-        const course = courses.find(c => c.id === userCourse.courseId) || 
-            { id: userCourse.courseId, name: userCourse.courseId };
-        
-        // Calculate proficiency percentage for progress bar
-        const proficiencyPercent = (userCourse.proficiency / 10) * 100;
-        
-        // Determine progress bar color and badge based on proficiency level
-        let progressClass = 'bg-info';
-        let badgeClass = 'bg-info';
-        let levelText = 'Intermediate';
-        
-        if (userCourse.proficiency >= 8) {
-            progressClass = 'bg-success';
-            badgeClass = 'bg-success';
-            levelText = 'Expert';
-        } else if (userCourse.proficiency >= 5) {
-            progressClass = 'bg-primary';
-            badgeClass = 'bg-primary';
-            levelText = 'Advanced';
-        } else if (userCourse.proficiency < 3) {
-            progressClass = 'bg-warning';
-            badgeClass = 'bg-warning';
-            levelText = 'Beginner';
-        }
-        
-        // Get course icon based on subject
-        let courseIcon = 'fas fa-book';
-        if (course.id.startsWith('CS')) {
-            courseIcon = 'fas fa-laptop-code';
-        } else if (course.id.startsWith('MTH')) {
-            courseIcon = 'fas fa-square-root-alt';
-        } else if (course.id.startsWith('PHY')) {
-            courseIcon = 'fas fa-atom';
-        } else if (course.id.startsWith('ENG')) {
-            courseIcon = 'fas fa-pen';
-        }
-        
-        return `
-        <div class="col-md-6 mb-3">
-            <div class="card h-100 shadow-sm border-0 course-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="course-icon me-3 p-2 rounded-circle bg-light text-${progressClass.replace('bg-', '')}">
-                            <i class="${courseIcon}"></i>
-                        </div>
-                        <h6 class="card-title mb-0">${course.id} - ${course.name}</h6>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small>Proficiency Level:</small>
-                        <span class="badge ${badgeClass}">${levelText}</span>
-                    </div>
-                    <div class="progress" style="height: 8px;">
-                        <div class="progress-bar ${progressClass}" role="progressbar" 
-                            style="width: ${proficiencyPercent}%" 
-                            aria-valuenow="${userCourse.proficiency}" 
-                            aria-valuemin="0" aria-valuemax="10">
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-1">
-                        <small class="text-muted">Beginner</small>
-                        <small class="text-muted">Expert (${userCourse.proficiency}/10)</small>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
-
-    coursesList.innerHTML = coursesHTML;
+// Helper function to get URL parameters
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    const results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
-// Handle logo click to go to appropriate dashboard
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize the profile page
+async function initializeProfile(cmsId) {
+    try {
+        // Fetch user profile data
+        const userData = await fetchUserProfile(cmsId);
+        
+        // Fetch user sessions data
+        const sessionsData = await fetchUserSessions(cmsId);
+        console.log('Sessions Data:', sessionsData);
+        
+        // Populate UI with user data
+        populateUserProfile(userData);
+        
+        // Update sessions count and rating
+        updateUserStats(sessionsData);
+        
+        // Update upcoming sessions
+        updateUpcomingSessions(sessionsData);
+        
+        // Show/hide tutor section based on user role
+        toggleTutorSection(userData);
+        
+    } catch (error) {
+        console.error('Error initializing profile:', error);
+        showErrorMessage('Failed to load profile data. Please try again later.');
+    }
+}
+
+// Fetch user profile data
+async function fetchUserProfile(cmsId) {
+    try {
+        console.log('Fetching user profile for CMS ID:', cmsId);
+        const response = await fetch(`http://${ipali}:8077/api/students/cms/${cmsId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        throw error;
+    }
+}
+
+// Fetch user sessions data
+async function fetchUserSessions(cmsId) {
+    try {
+        const response = await fetch(`http://${ipali}:8077/api/meetings/student/${cmsId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user sessions:', error);
+        throw error;
+    }
+}
+
+// Populate user profile data in the UI
+async function populateUserProfile(userData) {
+    console.log('User Data:', userData);
+    // Basic profile info
+    document.getElementById('profileName').textContent = userData.name;
+    document.getElementById('displayName').textContent = userData.name;
+    document.getElementById('displayCmsId').textContent = userData.cmsId || 'N/A';
+    document.getElementById('displayBatch').textContent = userData.batch || 'N/A';
+    document.getElementById('displaySemester').textContent = userData.semester || 'N/A';
+    document.getElementById('displayPhone').textContent = userData.phoneNumber || 'N/A';
+    document.getElementById('displayEmail').textContent = userData.email || 'N/A';
+    document.getElementById('activeSince').textContent = userData.activeSince || '2025';
+    console.log(':', userData);
+    // Toggle Student/Tutor badges
+    if (userData.isTutor) {
+        console.log('User is a tutor');
+        document.getElementById('tutorBadge').classList.remove('d-none');
+        document.getElementById('tutorDashboardLink').classList.remove('d-none');
+            tutorCourses = await getStudentCourses(userData.cmsId);
+            populateTutorCourses(tutorCourses);
+        
+    }
+}
+// get the courses from the API
+async function getStudentCourses(cmsId) {
+  const url = `http://${ipali}:8077/api/students/courses/${cmsId}`;
+
+  return fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch courses for ${cmsId}. Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Courses:', data);
+      return data; // You can return this data to use it elsewhere
+    })
+    .catch(error => {
+      console.error('Error fetching student courses:', error);
+      return null; // or throw error if you want to handle it upstream
+    });
+}
+
+// Populate tutor courses
+function populateTutorCourses(courses) {
+    const tutorCoursesListElement = document.getElementById('tutorCoursesList');
+    tutorCoursesListElement.innerHTML = '';
+    
+    
+    courses.forEach(course => {
+        console.log('Tutor Courses:', course);
+        console.log('Course:', course.courseName);
+        console.log('Proficiency Level:', course.proficiencyLevel);
+        const courseElement = document.createElement('div');
+        courseElement.className = 'col-md-6 mb-2';
+        
+        courseElement.innerHTML = `
+            <div class="course-badge p-2 rounded d-flex align-items-center">
+                <div class="course-icon me-2 bg-soft-primary rounded p-1">
+                    <i class="fas fa-book text-primary"></i>
+                </div>
+                <div>
+                    <span class="d-block">${course.courseName}</span>
+                    <small class="text-muted">Proficiency: ${course.proficiencyLevel}/10</small>
+                </div>
+            </div>
+        `;
+        
+        tutorCoursesListElement.appendChild(courseElement);
+    });
+}
+async function updateUserStats() {
+    try {
+        const cmsId = JSON.parse(localStorage.getItem('cmsId')) ;
+        console.log('Updating user stats for CMS ID:', cmsId);
+        // Fetch session count
+        const countResponse = await fetch(`http://${ipali}:8077/api/meetings/completed/count/student/${cmsId}`);
+        const countData = await countResponse.json();
+        const sessionsCount = countData;
+        document.getElementById('sessionsCount').textContent = sessionsCount;
+        console.log('Sessions Count:', sessionsCount);
+        // Fetch average rating directly
+        const ratingsResponse = await fetch(`http://${ipali}:8077/api/feedbacks/rating/tutor/${cmsId}`);
+        const ratingsData = await ratingsResponse.json();
+        console.log('Ratings Data:', ratingsData.averageRating);
+        // Assuming the API returns: { averageRating: 4.5 }
+        const averageRating = ratingsData.averageRating;
+        document.getElementById('userRating').textContent = averageRating;
+
+    } catch (error) {
+        console.error('Failed to update user stats:', error);
+        document.getElementById('sessionsCount').textContent = '0';
+        document.getElementById('userRating').textContent = '0.0';
+    }
+}
+
+
+
+// Update upcoming sessions
+function updateUpcomingSessions(sessionsData) {
+    const upcomingSessionsElement = document.getElementById('upcomingSessions');
+    
+    // Clear previous content except the "View All" button
+    const viewAllButton = upcomingSessionsElement.querySelector('.text-center');
+    upcomingSessionsElement.innerHTML = '';
+    
+    if (viewAllButton) {
+        upcomingSessionsElement.appendChild(viewAllButton);
+    }
+    
+    // Check if there are upcoming sessions
+    if (!sessionsData || !sessionsData.upcomingSessions || sessionsData.upcomingSessions.length === 0) {
+        const noSessionsElement = document.createElement('div');
+        noSessionsElement.className = 'text-center py-3';
+        noSessionsElement.innerHTML = '<p class="text-muted mb-0">No upcoming sessions</p>';
+        upcomingSessionsElement.insertBefore(noSessionsElement, viewAllButton);
+        return;
+    }
+    
+    // Sort sessions by date
+    const upcomingSessions = sessionsData.upcomingSessions.sort((a, b) => {
+        return new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time);
+    });
+    
+    // Display up to 3 upcoming sessions
+    upcomingSessions.slice(0, 3).forEach((session, index) => {
+        const sessionElement = document.createElement('div');
+        sessionElement.className = `session-item d-flex align-items-center p-2 ${index < upcomingSessions.length - 1 ? 'border-bottom' : ''}`;
+        
+        // Determine icon based on course subject
+        let iconClass = 'fa-book';
+        let bgClass = 'bg-soft-primary';
+        let textClass = 'text-primary';
+        
+        if (session.courseCode.startsWith('CS')) {
+            iconClass = 'fa-laptop-code';
+        } else if (session.courseCode.startsWith('MTH')) {
+            iconClass = 'fa-square-root-alt';
+            bgClass = 'bg-soft-success';
+            textClass = 'text-success';
+        }
+        
+        sessionElement.innerHTML = `
+            <div class="session-icon me-3 ${bgClass} p-2 rounded">
+                <i class="fas ${iconClass} ${textClass}"></i>
+            </div>
+            <div class="session-info">
+                <h6 class="mb-1">${session.courseCode} - ${session.topic}</h6>
+                <p class="small mb-0 text-muted">${formatSessionDate(session.date)}, ${session.time} with ${session.partnerName}</p>
+            </div>
+        `;
+        
+        upcomingSessionsElement.insertBefore(sessionElement, viewAllButton);
+    });
+}
+
+// Format session date (Today, Tomorrow, or actual date)
+function formatSessionDate(dateStr) {
+    const sessionDate = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    
+    if (sessionDate.toDateString() === today.toDateString()) {
+        return 'Today';
+    } else if (sessionDate.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+    } else {
+        return sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+}
+
+// Toggle tutor section visibility
+function toggleTutorSection(userData) {
+    const tutorSection = document.getElementById('tutorSection');
+    const modeSwitcher = document.getElementById('modeSwitcherSessions');
+    
+    if (userData.roles && userData.roles.includes('tutor')) {
+        tutorSection.classList.remove('d-none');
+        
+        // If user is both student and tutor, show mode switcher
+        if (userData.roles.includes('student')) {
+            modeSwitcher.classList.remove('d-none');
+        }
+    }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Mode switcher buttons
+    const studentModeBtn = document.getElementById('studentModeBtn');
+    const tutorModeBtn = document.getElementById('tutorModeBtn');
+    
+    if (studentModeBtn && tutorModeBtn) {
+        studentModeBtn.addEventListener('click', function() {
+            switchMode('student');
+            studentModeBtn.classList.add('active');
+            tutorModeBtn.classList.remove('active');
+        });
+        
+        tutorModeBtn.addEventListener('click', function() {
+            switchMode('tutor');
+            tutorModeBtn.classList.add('active');
+            studentModeBtn.classList.remove('active');
+        });
+    }
+    
+    // Home logo click event
     const homeLogo = document.getElementById('homeLogo');
     if (homeLogo) {
         homeLogo.addEventListener('click', function(e) {
             e.preventDefault();
-            const currentMode = localStorage.getItem('currentMode') || 'student';
-            window.location.href = currentMode === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html';
+            window.location.href = 'index.html';
         });
-    }
-    
-    // Update View All button when page loads
-    const viewAllBtn = document.getElementById('viewAllSessionsBtn');
-    if (viewAllBtn) {
-        const currentMode = localStorage.getItem('currentMode') || 'student';
-        viewAllBtn.href = currentMode === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html';
-    }
-    
-    loadUserData();
-});
-
-// Update upcoming sessions based on mode (student or tutor)
-function updateUpcomingSessions(mode) {
-    // Mock session data (in a real app, this would come from the backend)
-    const tutorSessions = [
-        {
-            course: 'CS101',
-            courseName: 'Arrays and Loops',
-            icon: 'fas fa-laptop-code',
-            iconClass: 'bg-soft-primary text-primary',
-            time: 'Today, 2:00 PM',
-            student: 'Sarah'
-        },
-        {
-            course: 'MTH101',
-            courseName: 'Integration',
-            icon: 'fas fa-square-root-alt',
-            iconClass: 'bg-soft-success text-success',
-            time: 'Tomorrow, 4:15 PM',
-            student: 'Michael'
-        }
-    ];
-    
-    const studentSessions = [
-        {
-            course: 'CS101',
-            courseName: 'Arrays and Loops',
-            icon: 'fas fa-laptop-code',
-            iconClass: 'bg-soft-primary text-primary',
-            time: 'Today, 2:00 PM',
-            tutor: 'Carol'
-        },
-        {
-            course: 'MTH101',
-            courseName: 'Derivatives',
-            icon: 'fas fa-square-root-alt',
-            iconClass: 'bg-soft-success text-success',
-            time: 'Tomorrow, 3:30 PM',
-            tutor: 'Alex'
-        }
-    ];
-    
-    const sessionsContainer = document.getElementById('upcomingSessions');
-    if (!sessionsContainer) return;
-    
-    const sessions = mode === 'tutor' ? tutorSessions : studentSessions;
-      // Update the heading of the sessions section
-    const sessionCards = document.querySelectorAll('.card-header h5');
-    sessionCards.forEach(header => {
-        if (header.closest('.card').querySelector('#upcomingSessions')) {
-            header.innerHTML = `<i class="fas fa-calendar-alt me-2 text-primary"></i> ${mode === 'tutor' ? 'Upcoming Meetings' : 'Upcoming Learning Sessions'}`;
-        }
-    });
-    
-    // Build sessions HTML
-    let sessionsHTML = '';
-    
-    if (sessions.length === 0) {
-        sessionsHTML = '<div class="alert alert-info">No upcoming sessions scheduled.</div>';
-    } else {
-        sessions.forEach((session, index) => {
-            const isLast = index === sessions.length - 1;
-            sessionsHTML += `
-            <div class="session-item d-flex align-items-center p-2 ${!isLast ? 'border-bottom' : ''}">
-                <div class="session-icon me-3 ${session.iconClass} p-2 rounded">
-                    <i class="${session.icon}"></i>
-                </div>
-                <div class="session-info">
-                    <h6 class="mb-1">${session.course} - ${session.courseName}</h6>
-                    <p class="small mb-0 text-muted">${session.time} with ${mode === 'tutor' ? session.student : session.tutor}</p>
-                </div>
-            </div>`;
-        });
-    }
-    
-    // Add "View All" button with link to appropriate dashboard
-    sessionsHTML += `
-    <div class="text-center mt-3">
-        <a href="${mode === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html'}" class="btn btn-sm btn-outline-primary">View All</a>
-    </div>`;
-    
-    // Update the container content
-    sessionsContainer.innerHTML = sessionsHTML;
-}
-
-// Update the home logo href based on current mode
-function updateHomeLogo(mode) {
-    const homeLogo = document.getElementById('homeLogo');
-    if (homeLogo) {
-        homeLogo.setAttribute('href', mode === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html');
     }
 }
 
-// Load user data
-function loadUserData() {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (!userData) {
-        // Show message if no user data exists
-        document.getElementById('displayName').textContent = 'No user data found';
-        document.getElementById('displayCmsId').textContent = 'N/A';
-        document.getElementById('displayBatch').textContent = 'N/A';
-        document.getElementById('displaySemester').textContent = 'N/A';
-        document.getElementById('displayPhone').textContent = 'N/A';
-        document.getElementById('displayEmail').textContent = 'N/A';
-        document.getElementById('profileName').textContent = 'No Profile Found';
-        return;
-    }
-
-    // Fill profile with user data
-    const userName = userData.name || 'Not provided';
-    document.getElementById('displayName').textContent = userName;
-    document.getElementById('profileName').textContent = userName;
-    document.getElementById('displayCmsId').textContent = userData.cmsId || 'Not provided';
-    document.getElementById('displayBatch').textContent = userData.batch || 'Not provided';
-    document.getElementById('displaySemester').textContent = 
-        userData.semester ? `${userData.semester}${getOrdinalSuffix(userData.semester)} Semester` : 'Not provided';
-    document.getElementById('displayPhone').textContent = userData.phone || 'Not provided';    document.getElementById('displayEmail').textContent = userData.email || 'Not provided';
-    
-    // Set active since year (either from user data or default to current year)
-    const activeSinceElement = document.getElementById('activeSince');
-    if (activeSinceElement) {
-        // If user has a registrationDate field, use that year
-        // Otherwise default to current year
-        const registrationYear = userData.registrationDate 
-            ? new Date(userData.registrationDate).getFullYear() 
-            : new Date().getFullYear();
-        activeSinceElement.textContent = registrationYear;
-    }
-
-    // Update statistics
-    document.getElementById('coursesCount').textContent = userStats.coursesCount;
-    document.getElementById('sessionsCount').textContent = userStats.sessionsCount;
-    document.getElementById('userRating').textContent = userStats.rating;
+// Switch between student and tutor mode
+async function switchMode(mode) {
+    const userId = localStorage.getItem('userId') || getUrlParameter('userId');
     
     try {
-        document.getElementById('userLevel').textContent = userStats.level;
-    } catch (e) {
-        // Element might not exist, safely ignore
-    }
-
-    // Show tutor badge if user is a tutor
-    if (userData.isTutor) {
-        document.getElementById('tutorBadge').classList.remove('d-none');
-        document.getElementById('tutorSection').classList.remove('d-none');
+        // // Fetch sessions based on the selected mode
+        // const response = await fetch(`${API_BASE_URL}/users/${userId}/sessions?mode=${mode}`);
         
-        // Show tutor dashboard link in navigation
-        document.getElementById('tutorDashboardLink').classList.remove('d-none');
-        
-        // Display user's tutor courses
-        displayTutorCourses(userData.courses);
-          // Show mode switcher for users who are both students and tutors
-        // In a real app, we'd check if they have both roles. Here we assume all users are students,
-        // and some are also tutors
-        const modeSwitcherSessions = document.getElementById('modeSwitcherSessions');
-        if (modeSwitcherSessions) {
-            modeSwitcherSessions.classList.remove('d-none');
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
-    }
-    
-    // Check which mode the user came from (default to student)
-    const currentMode = localStorage.getItem('currentMode') || 'student';
-    
-    // Initialize active button in mode switcher
-    if (userData.isTutor) {
-        const studentModeBtn = document.getElementById('studentModeBtn');
-        const tutorModeBtn = document.getElementById('tutorModeBtn');
         
-        if (currentMode === 'tutor') {
-            studentModeBtn.classList.remove('active');
-            tutorModeBtn.classList.add('active');
-        } else {
-            studentModeBtn.classList.add('active');
-            tutorModeBtn.classList.remove('active');
-        }
+        const sessionsData = await response.json();
+        
+        // Update UI with the new data
+        updateUpcomingSessions(sessionsData);
+        
+    } catch (error) {
+        console.error('Error switching mode:', error);
+        showErrorMessage('Failed to load session data. Please try again later.');
     }
-    
-    // Update upcoming sessions and logo based on current mode
-    updateUpcomingSessions(currentMode);
-    updateHomeLogo(currentMode);
 }
 
-// Add event listeners for mode switcher buttons (now in the Upcoming Sessions section)
-const studentModeBtn = document.getElementById('studentModeBtn');
-const tutorModeBtn = document.getElementById('tutorModeBtn');
-
-if (studentModeBtn && tutorModeBtn) {
-    studentModeBtn.addEventListener('click', function() {
-        if (!this.classList.contains('active')) {
-            tutorModeBtn.classList.remove('active');
-            this.classList.add('active');
-            localStorage.setItem('currentMode', 'student');
-            updateUpcomingSessions('student');
-            updateHomeLogo('student');
-        }
-    });      tutorModeBtn.addEventListener('click', function() {
-        // Get current user data
-        const userData = JSON.parse(localStorage.getItem('user')) || {};
-        
-        // Check if the user is already a tutor
-        if (!userData.isTutor) {
-            // Show the become tutor modal if user is not a tutor
-            const becomeTutorModal = new bootstrap.Modal(document.getElementById('becomeTutorModal'));
-            becomeTutorModal.show();
-            
-            // Reset the checkbox and hide course selection
-            const becomeTutorCheck = document.getElementById('becomeTutorCheck');
-            const tutorCourseSelectionSection = document.getElementById('tutorCourseSelectionSection');
-            if (becomeTutorCheck && tutorCourseSelectionSection) {
-                becomeTutorCheck.checked = false;
-                tutorCourseSelectionSection.classList.add('d-none');
-            }
-            
-            return; // Stop here, don't switch mode
-        }
-        
-        // Continue with regular mode switching for tutors
-        if (!this.classList.contains('active')) {
-            studentModeBtn.classList.remove('active');
-            this.classList.add('active');
-            localStorage.setItem('currentMode', 'tutor');
-            updateUpcomingSessions('tutor');
-            updateHomeLogo('tutor');
-        }
-    });
+// Show error message
+function showErrorMessage(message) {
+    // You could implement a toast notification or other UI feedback here
+    alert(message);
 }
-
-// Set the logo link based on current mode
-const homeLogo = document.getElementById('homeLogo');
-if (homeLogo) {
-    homeLogo.addEventListener('click', function(e) {
-        e.preventDefault();
-        const currentMode = localStorage.getItem('currentMode') || 'student';
-        window.location.href = currentMode === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html';
-    });
-}
-
-// Load user data when page loads
-loadUserData();
-
-// Become a Tutor Modal Functionality
-document.addEventListener('DOMContentLoaded', () => {
-    const becomeTutorCheck = document.getElementById('becomeTutorCheck');
-    const tutorCourseSelectionSection = document.getElementById('tutorCourseSelectionSection');
-    const saveTutorProfileBtn = document.getElementById('saveTutorProfile');
-    
-    if (becomeTutorCheck) {
-        becomeTutorCheck.addEventListener('change', function() {
-            tutorCourseSelectionSection.classList.toggle('d-none', !this.checked);
-            saveTutorProfileBtn.disabled = !this.checked;
-            
-            // If checked and course selection is empty, populate it
-            if (this.checked && document.getElementById('tutorCourseSelection').children.length === 0) {
-                populateTutorCourseSelection();
-            }
-        });
-    }
-    
-    // Save tutor profile when button is clicked
-    if (saveTutorProfileBtn) {
-        saveTutorProfileBtn.addEventListener('click', function() {
-            // Get selected courses and proficiency levels
-            const selectedCourses = [];
-            const courseCheckboxes = document.querySelectorAll('.tutor-course-checkbox:checked');
-            
-            courseCheckboxes.forEach(checkbox => {
-                const courseId = checkbox.value;
-                const proficiencyLevel = document.getElementById(`proficiency-${courseId}`).value;
-                
-                selectedCourses.push({
-                    courseId: courseId,
-                    proficiency: parseInt(proficiencyLevel)
-                });
-            });
-            
-            // Validate at least one course is selected
-            if (selectedCourses.length === 0) {
-                alert('Please select at least one course to teach.');
-                return;
-            }
-            
-            // Update user data in localStorage
-            const userData = JSON.parse(localStorage.getItem('user')) || {};
-            userData.isTutor = true;
-            userData.courses = selectedCourses;
-            localStorage.setItem('user', JSON.stringify(userData));
-            
-            // Close the modal
-            const becomeTutorModal = bootstrap.Modal.getInstance(document.getElementById('becomeTutorModal'));
-            becomeTutorModal.hide();
-            
-            // Update the UI to reflect the user is now a tutor
-            document.getElementById('tutorBadge').classList.remove('d-none');
-            document.getElementById('tutorSection').classList.remove('d-none');
-            document.getElementById('tutorDashboardLink').classList.remove('d-none');
-            document.getElementById('modeSwitcherSessions').classList.remove('d-none');
-            
-            // Switch to tutor mode
-            const studentModeBtn = document.getElementById('studentModeBtn');
-            const tutorModeBtn = document.getElementById('tutorModeBtn');
-            
-            studentModeBtn.classList.remove('active');
-            tutorModeBtn.classList.add('active');
-            localStorage.setItem('currentMode', 'tutor');
-            
-            // Update tutor courses display
-            displayTutorCourses(selectedCourses);
-            
-            // Update sessions and logo
-            updateUpcomingSessions('tutor');
-            updateHomeLogo('tutor');
-            
-            // Show success message
-            alert('Congratulations! You are now registered as a tutor.');
-        });
-    }
-});

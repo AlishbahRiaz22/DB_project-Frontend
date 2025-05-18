@@ -1,3 +1,5 @@
+ipali = '10.7.241.116'
+
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const cmsInput = document.getElementById("cmsId");
@@ -22,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     try {
-      fetch("http://localhost:8077/api/auth/login", {
+      fetch(`http://${ipali}:8077/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,6 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then((data) => {
           console.log("Login successful:", data);
+          // Store user data in local storage
+          localStorage.setItem("cmsId", JSON.stringify(formData.cmsId));
           window.location.href = "student-dashboard.html";
         })
         .catch((error) => {
