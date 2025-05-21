@@ -1,4 +1,4 @@
-ipali = '10.7.241.116'
+ipali = '10.7.48.193'
 
 document.addEventListener("DOMContentLoaded", () => {
     const signupForm = document.getElementById("signupForm");
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Submitting Form Data:", formData); // Debug log
 
         try {
-            const response = await fetch(`http:${ipali}//:8077/api/auth/signup`, {
+            const response = await fetch(`http://${ipali}:8077/api/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

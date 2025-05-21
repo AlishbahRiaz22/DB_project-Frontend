@@ -1,5 +1,6 @@
 
-ipali = '10.7.241.116'
+ipali = '10.7.48.193'
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM elements
     const editProfileForm = document.getElementById('editProfileForm');

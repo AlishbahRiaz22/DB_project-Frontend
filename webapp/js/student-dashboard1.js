@@ -1,4 +1,4 @@
-ipali = "10.7.241.116";
+ipali = '10.7.48.193'
 
 document.addEventListener("DOMContentLoaded", () => {
   // Set current mode for profile page session display
@@ -597,7 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Close modal and reset form
             const modal = bootstrap.Modal.getInstance(
-              document.getElementById("sessionFeedbackModal")
+              document.getElementById("completeRequestModal")
             );
             modal.hide();
 
@@ -645,22 +645,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   function acceptTutor(requestId, responseId, preferredTime, meetingType) {
-    console.log("Accepting tutor:", {
-      requestId,
-      responseId,
-      preferredTime,
-      meetingType,
-    });
+    console.log("Accepting tutor with requestId:", requestId);
+    console.log("Accepting tutor with responseId:", responseId);
+
     fetch(`http://${ipali}:8077/api/meetings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        requestId: requestId,
-        selectedResponseId: responseId,
-        meetingType: meetingType,
-        meetingDate: preferredTime,
+        "requestId" : parseInt(requestId),
+      "selectedResponseId": parseInt(responseId),
+      "meetingDate": preferredTime,
+      "meetingType": meetingType,
+        
       }),
     })
       .then((response) => {
@@ -686,6 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function declineTutor(responseId) {
+    console.log("Declining tutor with responseId:", responseId);
     fetch(`http://${ipali}:8077/api/requests/deleteResponse`, {
       method: "DELETE",
       headers: {
@@ -714,55 +713,58 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Show session feedback modal
-  function showSessionFeedbackModal(requestId) {
-    // Set values in the form
-    document.getElementById("feedbackRequestId").value = requestId;
+  // Show session feedback modal and reset form & stars
+function showSessionFeedbackModal(requestId) {
+  // Set the hidden input value
+  document.getElementById("feedbackRequestId").value = requestId;
 
-    // Reset stars and form
-    document.querySelectorAll(".star-rating").forEach((star) => {
-      star.classList.remove("active");
-      star.classList.replace("fas", "far");
-    });
-    document.getElementById("sessionRating").value = "";
-    document.getElementById("ratingText").textContent = "Click to rate";
-    document.getElementById("sessionFeedbackText").value = "";
+  // Reset stars and form inputs
+  document.querySelectorAll(".star-rating").forEach((star) => {
+    star.classList.remove("active");
+    star.classList.replace("fas", "far");
+  });
+  document.getElementById("sessionRating").value = "";
+  document.getElementById("ratingText").textContent = "Click to rate";
+  document.getElementById("sessionFeedbackText").value = "";
 
-    // Show the modal
-    const modal = new bootstrap.Modal(
-      document.getElementById("sessionFeedbackModal")
-    );
-    modal.show();
+  // Show the modal
+  const modalEl = document.getElementById("sessionFeedbackModal");
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
 
-    // Add event listeners for star rating
-    document.querySelectorAll(".star-rating").forEach((star) => {
-      star.addEventListener("click", function () {
-        const rating = this.dataset.rating;
-        document.getElementById("sessionRating").value = rating;
 
-        // Update visual feedback
-        document.querySelectorAll(".star-rating").forEach((s) => {
-          if (s.dataset.rating <= rating) {
-            s.classList.replace("far", "fas");
-            s.classList.add("active");
-          } else {
-            s.classList.replace("fas", "far");
-            s.classList.remove("active");
-          }
-        });
+  // Initialize star rating event listeners once
+function initStarRating() {
+  document.querySelectorAll(".star-rating").forEach((star) => {
+    star.addEventListener("click", function () {
+      const rating = this.dataset.rating;
+      document.getElementById("sessionRating").value = rating;
 
-        // Update rating text
-        const ratingTexts = [
-          "",
-          "Poor",
-          "Fair",
-          "Good",
-          "Very Good",
-          "Excellent",
-        ];
-        document.getElementById("ratingText").textContent = ratingTexts[rating];
+      // Update visual feedback
+      document.querySelectorAll(".star-rating").forEach((s) => {
+        if (s.dataset.rating <= rating) {
+          s.classList.replace("far", "fas");
+          s.classList.add("active");
+        } else {
+          s.classList.replace("fas", "far");
+          s.classList.remove("active");
+        }
       });
+
+      // Update rating text
+      const ratingTexts = [
+        "",
+        "Poor",
+        "Fair",
+        "Good",
+        "Very Good",
+        "Excellent",
+      ];
+      document.getElementById("ratingText").textContent = ratingTexts[rating];
     });
-  }
+  });
+}
 
   // Populate tutor course selection for the Become a Tutor modal
   function populateTutorCourseSelection() {
@@ -903,31 +905,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // Open the complete request form
-  function openCompleteRequestForm(meetingId) {
-    const meeting = window.scheduledMeetings[index];
-    console.log("Meeting ID:", meetingId);
-    // Set values in the form
-    document.getElementById("feedbackRequestId").value = meetingId;
-    console.log(document.getElementById("feedbackRequestId").value);
-    document.getElementById("feedbackTutorId").value = meeting.tutorId;
-    document.getElementById("feedbackTutorName").textContent =
-      meeting.tutorName;
+function openCompleteRequestForm(meetingId) {
+  // const meeting = window.scheduledMeetings.find(m => m.id === meetingId);
+  // if (!meeting) {
+  //   console.error("Meeting not found for ID:", meetingId);
+  //   return;
+  // }
+  console.log("Meeting ID:", meetingId);
+  // Show the correct modal
+  const modalEl = document.getElementById("completeRequestModal");
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+  // Set values in the form
+  document.getElementById("feedbackRequestId").value = meetingId;
+  document.getElementById("feedbackTutorId").value = meeting.tutorId;
+  document.getElementById("feedbackTutorName").textContent = meeting.tutorName;
 
-    // Reset stars and form
-    document.querySelectorAll(".star-rating").forEach((star) => {
-      star.classList.remove("active");
-      star.classList.replace("fas", "far");
-    });
-    document.getElementById("sessionRating").value = "";
-    document.getElementById("ratingText").textContent = "Click to rate";
-    document.getElementById("sessionFeedbackText").value = "";
+  // Reset stars and form
+  document.querySelectorAll(".star-rating").forEach((star) => {
+    star.classList.remove("active");
+    star.classList.replace("fas", "far");
+  });
+  document.getElementById("sessionRating").value = "";
+  document.getElementById("ratingText").textContent = "Click to rate";
+  document.getElementById("sessionFeedbackText").value = "";
 
-    // Show the modal
-    const modal = new bootstrap.Modal(
-      document.getElementById("sessionFeedbackModal")
-    );
-    modal.show();
-  }
+  
+}
+
 
   function loadscheduledmeetings() {
     const meetingsList = document.getElementById("meetingsList");
@@ -977,16 +982,17 @@ document.addEventListener("DOMContentLoaded", () => {
           )
           .join("");
 
-          // Attach event listeners to all Complete Request buttons
+
+
+        meetingsList.innerHTML = html;
+
+                  // Attach event listeners to all Complete Request buttons
 document.querySelectorAll('.complete-request-btn').forEach(button => {
   button.addEventListener('click', (e) => {
     const meetingId = e.target.getAttribute('data-meeting-id');
     openCompleteRequestForm(meetingId);
   });
 });
-
-        meetingsList.innerHTML = html;
-
         // Save data globally for form access
         window.scheduledMeetings = meetings;
       })
@@ -1000,4 +1006,6 @@ document.querySelectorAll('.complete-request-btn').forEach(button => {
 
   // Initialize the dashboard
   initDashboard();
+
+  initStarRating();
 });
