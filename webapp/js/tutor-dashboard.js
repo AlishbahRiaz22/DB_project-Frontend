@@ -1,5 +1,4 @@
-
-ipali = '10.7.241.116'
+ipali = '10.7.48.193'
 // Global variables
 
 let currentTutor = null;
